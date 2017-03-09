@@ -1,54 +1,63 @@
 package jenkins.jobs;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.util.Iterator;
-import java.util.regex.Pattern;
-
-import com.offbytwo.jenkins.JenkinsServer;
+import java.util.ArrayList;
+import java.util.Queue;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
 import com.offbytwo.jenkins.model.Computer;
 import com.offbytwo.jenkins.model.Job;
 
-public class RunJenkins extends JenkinsAuth{
-	
-	JobsConfig config;
-	
-	RunJenkins() {
-		super.initJenkins();
-		config = instantiatePage(jenkins,JobsConfig.class);
+public class RunJenkins extends JenkinsAuth {
+
+	private static String environment;
+	private static String radiatorUrl;
+	private static String genericUrl;
+	public static PropertiesConfiguration envProperties;
+
+	protected static void setUpEnvProperties() {
+		try {
+			envProperties = new PropertiesConfiguration(
+					"environment.properties");
+			environment = System.getProperty("env");
+			System.out.println("Env======" + environment);
+			radiatorUrl = envProperties.getString(environment + ".radiator");
+			System.out.println("URL======" + radiatorUrl);
+			genericUrl = envProperties.getString("jenkins.generic");
+		} catch (ConfigurationException e) {
+			e.printStackTrace();
+		}
 	}
-	
-	
-			
-	public static void main(String args[]) throws IOException{
-		RunJenkins auth = new RunJenkins();
-//		JenkinsServer jenkins = authenticateJenkins(auth.url, auth.userName, auth.passWord);
-		
-		String getJobXml = auth.config.getJobXml("COMPLETE_AONE_QA3");
-		String patternToReplace = "<assignedNode>.*?</assignedNode>";
-		Pattern pattern = Pattern.compile(patternToReplace);
-		String seleniumAgent = "SeleniumAgent-Omni1";
-		String updatedXml = pattern.matcher(getJobXml).replaceAll("<assignedNode>"+seleniumAgent+"</assignedNode>");
-//		System.out.println(getJobXml);
-		System.out.println(updatedXml);
-//		jenkins.updateJob("COMPLETE_AONE_QA3", updatedXml);
-//		jenkins.getJob("COMPLETE_AONE_QA3").build();
-//		Iterator <Computer> itr = jenkins.getComputers().values().iterator();
-//		while(itr.hasNext()){
-//		Computer computer = itr.next();
-//		computer.details();
-//		System.out.println("Computer========"+computer.details().getIdle());
-//		}
-//		System.out.println("Jobs==="+jenkins.updateJob(jobName, jobXml););//getComputerSet().getDisplayName());//getJobs().size());
-//		Iterator <Job> itr = (Iterator<Job>) jenkins.getJobs().values().iterator();
-//
-//		while(itr.hasNext()){
-//			Job job = itr.next();
-////			if(job.details().getLastBuild().details().getResult().toString().contains("FAILURE"))
-//			String jobName = job.getName();
-//			System.out.println(jobName);
-//			System.out.println("Description==="+job.details());
-//		}
-//		System.out.println("----------"+jenkins.getJobs().values().iterator().next().details().getLastBuild().details().getResult());
+
+	public static void main(String args[]) throws IOException,
+			InterruptedException {
+		setUpEnvProperties();
+		JobsConfig config = new JobsConfig(radiatorUrl);
+		RunJobs runJobs = new RunJobs(genericUrl);
+		JobsMetadata metaData = new JobsMetadata(radiatorUrl);
+		Queue<Job> jobs = metaData.getQueueOfJobs();
+		Queue<String> desiredJobs = metaData.getDesiredJobs();
+		ArrayList<Computer> agents = runJobs.getListOfOmniSeleniumAgents();
+		System.out.println("Size of jobs: " + jobs.size());
+		for (; desiredJobs.size() != 0;) {
+			System.out.println("This is inside for");
+			for (Computer agent : agents) {
+				Computer computer = agent;
+				System.out.println("Is the selenium agent idle above if: "
+						+ agent.getDisplayName() + "   "
+						+ runJobs.isTheSeleniumAgentIdle(computer));
+				if (runJobs.isTheSeleniumAgentIdle(agent)) {
+					String jobName = jobs.poll().details().getDisplayName();
+					System.out.println("Size og queue========" + jobs.size());
+					config.updateJobConfigWithDesiredSeleniumAgent(jobName,
+							agent.getDisplayName());
+					System.out.println("Running job: " + jobName
+							+ " on Agent: |" + agent.getDisplayName() + "|");
+					Thread.sleep(5000);
+					runJobs.runJob(jobName);
+				}
+				Thread.sleep(8000);
+			}
+		}
 	}
 }

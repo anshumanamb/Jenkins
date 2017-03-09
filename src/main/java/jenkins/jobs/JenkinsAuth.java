@@ -10,31 +10,26 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import com.offbytwo.jenkins.JenkinsServer;
 
- class JenkinsAuth {
+class JenkinsAuth {
+
 	protected JenkinsServer jenkins;
 	private URI jenkinURI;
 	private URL url;
-	private PropertiesConfiguration urlProperties;
 	private PropertiesConfiguration authProperties;
-
-	String jenkinsUrl;
-	String userName;
-	String passWord;
+	private String userName;
+	private String passWord;
 
 	JenkinsAuth() {
 		try {
-			urlProperties = new PropertiesConfiguration(
-					"environment.properties");
 			authProperties = new PropertiesConfiguration("auth.properties");
 		} catch (ConfigurationException e) {
 			e.printStackTrace();
 		}
-		jenkinsUrl = urlProperties.getString("jenkins.qa");
 		userName = authProperties.getString("jenkins.username");
 		passWord = authProperties.getString("jenkins.password");
 	}
 
-	public void initJenkins() {
+	protected JenkinsServer initJenkins(String jenkinsUrl) {
 		try {
 			url = new URL(jenkinsUrl);
 			jenkinURI = url.toURI();
@@ -43,7 +38,7 @@ import com.offbytwo.jenkins.JenkinsServer;
 		} catch (URISyntaxException uriException) {
 			uriException.printStackTrace();
 		}
-		jenkins = new JenkinsServer(jenkinURI, userName, passWord);
+		return jenkins = new JenkinsServer(jenkinURI, userName, passWord);
 	}
 
 	protected <T> T instantiatePage(JenkinsServer jenkins,

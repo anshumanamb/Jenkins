@@ -1,20 +1,19 @@
 package jenkins.jobs;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.regex.Pattern;
 import com.offbytwo.jenkins.JenkinsServer;
 
-public class JobsConfig {
+public class JobsConfig extends JenkinsAuth {
 
 	private JenkinsServer jenkins;
 
+	JobsConfig(String Url) {
+		this.jenkins = super.initJenkins(Url);
+	}
+
 	private final String PATTERN_TO_REPLACE = "<assignedNode>.*?</assignedNode>";
 	private Pattern pattern;
-
-	public JobsConfig(JenkinsServer jenkins) throws MalformedURLException {
-		this.jenkins = jenkins;
-	}
 
 	public void updateJobConfigWithDesiredSeleniumAgent(String jobName,
 			String seleniumAgent) {
@@ -25,12 +24,16 @@ public class JobsConfig {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		pattern.matcher(getXmlOfTheJob).replaceAll(
+		String updatedXml = pattern.matcher(getXmlOfTheJob).replaceAll(
 				"<assignedNode>" + seleniumAgent + "</assignedNode>");
+		try {
+			jenkins.updateJob(jobName, updatedXml);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public String getJobXml(String jobName) throws IOException {
-		System.out.println(jenkins.getJobXml(jobName));
 		return jenkins.getJobXml(jobName);
 	}
 }
