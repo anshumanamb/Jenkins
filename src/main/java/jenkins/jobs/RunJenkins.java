@@ -1,12 +1,18 @@
 package jenkins.jobs;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Queue;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.lang.StringUtils;
+
 import com.offbytwo.jenkins.model.Computer;
 import com.offbytwo.jenkins.model.Job;
+import com.offbytwo.jenkins.model.TestReport;
 
 public class RunJenkins extends JenkinsAuth {
 
@@ -35,6 +41,7 @@ public class RunJenkins extends JenkinsAuth {
 		JobsConfig config = new JobsConfig(radiatorUrl);
 		RunJobs runJobs = new RunJobs(genericUrl);
 		JobsMetadata metaData = new JobsMetadata(radiatorUrl);
+		failed();
 		Queue<Job> jobs = metaData.getQueueOfJobs();
 		Queue<String> desiredJobs = metaData.getDesiredJobs();
 		ArrayList<Computer> agents = runJobs.getListOfOmniSeleniumAgents();
@@ -48,7 +55,7 @@ public class RunJenkins extends JenkinsAuth {
 						+ runJobs.isTheSeleniumAgentIdle(computer));
 				if (runJobs.isTheSeleniumAgentIdle(agent)) {
 					String jobName = jobs.poll().details().getDisplayName();
-					System.out.println("Size og queue========" + jobs.size());
+					System.out.println("Size of queue:" + jobs.size());
 					config.updateJobConfigWithDesiredSeleniumAgent(jobName,
 							agent.getDisplayName());
 					System.out.println("Running job: " + jobName
@@ -59,5 +66,54 @@ public class RunJenkins extends JenkinsAuth {
 				Thread.sleep(8000);
 			}
 		}
+//		failedJobs = jobStatus.getListOfFailedJobs(metaData);
+//		for (Job job : failedJobs){
+//			System.out.println("Failed job======"+job.getName());
+//			job.details().getLastBuild().getTestReport();
 	}
+	
+	public static void failed() throws IOException{
+		ArrayList<Job> failedJobs = new ArrayList<Job>();
+		JobsMetadata metaData = new JobsMetadata(radiatorUrl);
+		JobStatus jobStatus = new JobStatus(radiatorUrl);
+		failedJobs = jobStatus.getListOfFailedJobs(metaData);
+		for (Job job : failedJobs){
+			System.out.println("Failed job======"+job.getName()+"\n");
+//			int status = job.details().getLastBuild().getClient().getStatusLine().getStatusCode();
+			try {
+				String output = job.getFileFromWorkspace("omni-selenium-regression-tests/target/screenshots");//failsafe-reports/emailable-report.html
+				//.details().getDescription().getLastBuild().details().getConsoleOutputHtml();
+				System.out.println("URL========"+job.getUrl());
+				System.out.println("Test report========"+output);
+				ArrayList<String> failedScr = new ArrayList<String>();
+				failedScr.add(StringUtils.substringBetween(output,"png\" /></td><td><a href=\"", ".png"));
+				System.out.println("FAILED=-=========="+failedScr.get(0));
+				
+				 File newTextFile = new File("D:/thetextfile.html");
+		            FileWriter fw = new FileWriter(newTextFile);
+		            fw.write(output);
+		            fw.close();
+		            break;
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+//			String output = job.getFileFromWorkspace("omni-selenium-regression-tests/target/screenshots");
+////			while (output.toLowerCase().contains("hithighlite")) {
+//				ArrayList<String> failedScr = new ArrayList<String>();
+//				failedScr.add(StringUtils.substringBetween("png\" /></td><td><a href=\"", ".png"));
+//				System.out.println("FAILED=-=========="+failedScr.get(0));
+//			      highLightedTerm = StringUtils.substringBetween(html.toLowerCase(), "span class=\"hithighlite\">", "</span>");
+//			      String repeatedTerm = highLightedTerm.substring(0, 2);
+//			      System.out.println("Highlighted Term: " + highLightedTerm);
+//			      xml = StringUtils.substringBefore(html.toLowerCase(), "<span class");
+//			      String lastTwo = xml.substring(xml.length() - 2);
+//			      html = StringUtils.substringAfter(html.toLowerCase(), "span class=\"hithighlite");
+//			      Assert.assertNotEquals("Failing as the Character is repeated for: " + query, lastTwo, repeatedTerm);
+			      }
+//			     }
+//			    }
+//	    }//getClient().get(job.getUrl() + "/testngreports/?", TestReport.class));
+		
+		}
 }
