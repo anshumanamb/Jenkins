@@ -97,23 +97,45 @@ public class RunJenkins extends JenkinsAuth {
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
-//			String output = job.getFileFromWorkspace("omni-selenium-regression-tests/target/screenshots");
-////			while (output.toLowerCase().contains("hithighlite")) {
-//				ArrayList<String> failedScr = new ArrayList<String>();
-//				failedScr.add(StringUtils.substringBetween("png\" /></td><td><a href=\"", ".png"));
-//				System.out.println("FAILED=-=========="+failedScr.get(0));
-//			      highLightedTerm = StringUtils.substringBetween(html.toLowerCase(), "span class=\"hithighlite\">", "</span>");
-//			      String repeatedTerm = highLightedTerm.substring(0, 2);
-//			      System.out.println("Highlighted Term: " + highLightedTerm);
-//			      xml = StringUtils.substringBefore(html.toLowerCase(), "<span class");
-//			      String lastTwo = xml.substring(xml.length() - 2);
-//			      html = StringUtils.substringAfter(html.toLowerCase(), "span class=\"hithighlite");
-//			      Assert.assertNotEquals("Failing as the Character is repeated for: " + query, lastTwo, repeatedTerm);
-			      }
-//			     }
-//			    }
-//	    }//getClient().get(job.getUrl() + "/testngreports/?", TestReport.class));
-		
+			}		
 		}
+	}
+	
+	/*public static void failed() throws IOException {
+		ArrayList<Job> failedJobs = new ArrayList<Job>();
+		JobsMetadata metaData = new JobsMetadata(radiatorUrl);
+		JobStatus jobStatus = new JobStatus(radiatorUrl);
+		failedJobs = jobStatus.getListOfFailedJobs(metaData);
+		for (Job job : failedJobs) {
+			System.out.println("Failed job======" + job.getName() + "\n");
+			try {
+				String output = job
+						.getFileFromWorkspace("omni-selenium-regression-tests/target/screenshots");// failsafe-reports/emailable-report.html
+				ArrayList<String> failedScr = new ArrayList<String>();
+				String currentUrl = null;
+				while (output.contains("png\" /></td><td><a href=\"")) {
+					currentUrl = job
+							.getUrl()
+							.replace("http://jenkins.gale.web:8080/", "")
+							.replace("_Suite",
+									"_Suite/ws/omni-selenium-regression-tests/target/screenshots");
+					failedScr.add(StringUtils.substringBetween(output,
+							"png\" /></td><td><a href=\"", ".png"));
+					output = StringUtils.substringAfter(output,
+							"png\" /></td><td><a href=\"");
+				}
+				for (String failed : failedScr) {
+					String screenshotURL = radiatorUrl + currentUrl + failed;
+					System.out.println("New URL================"
+							+ screenshotURL + ".png");
+				}
+				File newTextFile = new File("D:/thetextfile.html");
+				FileWriter fw = new FileWriter(newTextFile);
+				fw.write(output);
+				fw.close();
+				break;
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}*/
 }
