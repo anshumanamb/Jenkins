@@ -38,11 +38,11 @@ public class RunJobs extends JenkinsAuth {
 		while (totalComputers.hasNext()) {
 			Computer currentComputer = totalComputers.next();
 			computerName = currentComputer.getDisplayName();
-			if (computerName.equals("SeleniumAgent-Omni1")
-					|| computerName.equals("SeleniumAgent-Omni2")
-					|| computerName.equals("SeleniumAgent-Omni3")
-					|| computerName.equals("SeleniumAgent-Omni4")
-					|| computerName.equals("SeleniumAgent-Omni5")) {
+			if (computerName.equals("Selenium-Omni1")
+					|| computerName.equals("Selenium-Omni2")
+					|| computerName.equals("Selenium-Omni3")
+					|| computerName.equals("Selenium-Omni4")
+					|| computerName.equals("Selenium-Omni5")) {
 				computers.add(currentComputer);
 			}
 		}
