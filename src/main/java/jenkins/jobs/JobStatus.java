@@ -45,6 +45,30 @@ public class JobStatus extends JenkinsAuth{
 		return failedJobs;
 	}
 	
+	public Queue<String> getSortedQueueOfFailedJobs(JobsMetadata metaData) throws InterruptedException {
+		Queue<String> failedJobs = new LinkedList<String>();
+		ArrayList<String> list = new ArrayList<String>();
+		Iterator<Job> totalJobs = metaData.getListOfJobs();
+		Job job;
+		while (totalJobs.hasNext()){
+			job = totalJobs.next();
+			System.out.println("Status====="+getResultOfJob(job));
+			if(getResultOfJob(job).equals("FAILURE")){
+				Thread.sleep(3000);
+//				failedJobs.add(job);
+				try {
+					list.add(job.details().getDisplayName());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		for(String failed : list){
+			failedJobs.add(failed);
+		}
+		return failedJobs;
+	}
+	
 	public ArrayList<Job> getListOfFailedJobs(JobsMetadata metaData) throws InterruptedException {
 		ArrayList<Job> failedJobs = new ArrayList<Job>();
 		Iterator<Job> totalJobs = metaData.getListOfJobs();

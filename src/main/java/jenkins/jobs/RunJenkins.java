@@ -13,9 +13,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+
+import net.sf.json.JSONException;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
+
 import com.offbytwo.jenkins.model.Computer;
 import com.offbytwo.jenkins.model.Job;
 
@@ -43,19 +47,20 @@ public class RunJenkins extends JenkinsAuth {
 	}
 
 	public static void main(String args[]) throws IOException,
-			InterruptedException {
+			InterruptedException, JSONException, org.json.JSONException {
 		setUpEnvProperties();
 		JobsMetadata metaData = new JobsMetadata(radiatorUrl);
 		JobStatus jobStatus = new JobStatus(radiatorUrl);
-		Queue<Job> jobs = new LinkedList<Job>();
-		jobs = metaData.getQueueOfJobs();
+//		Queue<Job> jobs = new LinkedList<Job>();
+		Queue<String> jobs = metaData.getSortedQueueOfJobs();
+//		jobs = metaData.getQueueOfJobs();
 		runTheJobs(jobs);
 		Thread.sleep(900000);
-		jobs = jobStatus.getQueueOfFailedJobs(metaData);
+		jobs = jobStatus.getSortedQueueOfFailedJobs(metaData);
 		runTheJobs(jobs);
 	}
 
-	public static void runTheJobs(Queue<Job> jobs) throws IOException, InterruptedException{
+	public static void runTheJobs(Queue<String> jobs) throws IOException, InterruptedException{
 		RunJobs runJobs = new RunJobs(genericUrl);
 		JobsConfig config = new JobsConfig(radiatorUrl);
 	ArrayList<Computer> agents = runJobs.getListOfOmniSeleniumAgents();
@@ -69,7 +74,7 @@ public class RunJenkins extends JenkinsAuth {
 					+ agent.getDisplayName() + "   "
 					+ runJobs.isTheSeleniumAgentIdle(computer));
 			if (runJobs.isTheSeleniumAgentIdle(agent)) {
-				String jobName = jobs.poll().details().getDisplayName();
+				String jobName = jobs.poll();
 				System.out.println("Size of queue:" + jobs.size());
 				config.updateJobConfigWithDesiredSeleniumAgent(jobName,
 						agent.getDisplayName());
